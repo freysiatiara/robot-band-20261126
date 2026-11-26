@@ -29,6 +29,14 @@ def main():
     with open(path, "w", encoding="utf-8") as f:
         f.write(line)
     os.chmod(path, 0o644)
+    # Read-back verification guard: the bytes on disk must equal the
+    # intended line exactly and stay within the 1..200 char gate.
+    with open(path, "rb") as f:
+        written = f.read()
+    if written != line.encode("utf-8"):
+        raise SystemExit("read-back mismatch: output bytes differ from intended entry")
+    if not 1 <= len(written.decode("utf-8")) <= 200:
+        raise SystemExit("read-back length out of range: %d chars" % len(written.decode("utf-8")))
 
 
 if __name__ == "__main__":
